@@ -1,43 +1,40 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Hash;
-
 use App\Models\User;
 
 class UserController extends Controller
 {
-    public function index() 
+    public function index()
     {
-        $users = User::orderBy('id', 'desc')->paginate(10);
-        return view('users.index',  compact('users'));
+        $users = User::orderBy('id','desc')->paginate(10);
+        return view('users.index', compact('users'));
     }
 
-    public function create() 
+    public function create()
     {
         return view('users.create');
     }
 
-    Public function store(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'name' => ['required','string','max:255'],
+            'email' => ['required','email','max:255','unique:users,email'],
             'role' => ['required', Rule::in(['admin', 'user'])],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required','string','min:6','confirmed'],
         ]);
 
         User::create([
-        'name' => $validated['name'],
-        'email' => $validated['email'],
-        'role' => $validated['role'],
-        'password' =>  Hash::make($validated['password']),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+            'password' => \Hash::make($validated['password']),
         ]);
 
-        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
+        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');
     }
 
     public function edit(User $user)
@@ -48,10 +45,10 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'name' => ['required','string','max:255'],
+            'email' => ['required','email','max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in(['admin', 'user'])],
-            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+            'password' => ['nullable','string','min:6','confirmed'],
         ]);
 
         $user->name = $validated['name'];
@@ -59,22 +56,22 @@ class UserController extends Controller
         $user->role = $validated['role'];
 
         if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
+            $user->password = \Hash::make($validated['password']);
         }
 
         $user->save();
 
-        return redirect()->route('users.index')->with('success', 'User berhasil diupdate.');
+        return redirect()->route('users.index')->with('success', 'User berhasil diupdate!');
     }
-
+    
     public function destroy(User $user)
-    {   
-    if (auth()->id() === $user->id) {
-        return redirect()->route('users.index')->with('error', 'Anda tidak bisa menghapus akun sendiri.');
-    }
+    {
+        if (auth()->id() === $user->id) {
+            return redirect()->route('users.index')->with('error', 'Anda tidak dapat menghapus akun sendiri!');
+        }
+        
+        $user->delete();
 
-    $user->delete();
-
-    return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
+        return redirect()->route('users.index')->with('success', 'User berhasil dihapus!');
     }
 }
